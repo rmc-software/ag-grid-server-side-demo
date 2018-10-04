@@ -1,7 +1,7 @@
 {
   "name": "ag-grid-server-side-demo",
   "version": "1.0.0",
-  "description": "A reference implementation showing how to perform server-side operations with GraphQL and ag-Grid.",
+  "description": "A simple demo app showing how to perform server-side operations using ag-Grid with node.js and MySQL.",
   "main": "index.js",
   "scripts": {
     "start": "babel-node ./server/server.js",
@@ -26,18 +26,12 @@
     "style-loader": "^0.20.1",
     "webpack": "^3.11.0",
     "webpack-dev-middleware": "^2.0.5",
-    "webpack-livereload-plugin": "^1.0.0",
-    "jest": "^23.6.0"
+    "webpack-livereload-plugin": "^1.0.0"
   },
   "dependencies": {
     "ag-grid-community": "^19.0.0",
     "ag-grid-enterprise": "^19.0.0",
-    "apollo-boost": "^0.1.16",
     "express": "^4.16.2",
-    "express-graphql": "^0.6.12",
-    "graphql": "^14.0.2",
-    "graphql-tag": "^2.9.2",
-    "graphql-tools": "^3.1.1",
     "mysql": "2.16.0",
     "body-parser": "^1.18.3"
   },

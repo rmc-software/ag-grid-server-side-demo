@@ -9,18 +9,18 @@ import OlympicWinnersService from './olympicWinnersService';
 const app = express();
 app.use(webpackMiddleware(webpack(webpackConfig)));
 
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
 app.post('/olympicWinners', function (req, res) {
-  OlympicWinnersService.list(req.body, function(rows, lastRow) {
-    res.json({
-      rows: rows,
-      lastRow: lastRow
+    OlympicWinnersService.list(req.body, function (rows, lastRow) {
+        res.json({
+            rows: rows,
+            lastRow: lastRow
+        });
     });
-  });
 });
 
 app.listen(4000, () => {
-  console.log('Started on localhost:4000');
+    console.log('Started on localhost:4000');
 });
