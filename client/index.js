@@ -7,40 +7,45 @@ import "ag-grid-community/dist/styles/ag-theme-balham.css";
 const gridOptions = {
     columnDefs: [
         {field: 'athlete'},
-        {field: 'country', rowGroup: true, hide: true},
-        {field: 'sport', rowGroup: true, hide: true},
+        {field: 'country'}, //rowGroup: true, hide: true, sort: 'asc'},
+        {field: 'sport'}, //rowGroup: true, hide: true},
         {field: 'year'},
-        {field: 'gold'},
+        {field: 'gold'}, //aggFunc: 'sum'},
         {field: 'silver'},
         {field: 'bronze'},
     ],
 
     rowModelType: 'serverSide',
     cacheBlockSize: 100,
+    maxBlocksInCache: 50,
 
-    enableSorting: true,
-    enableFilter: true,
-    sideBar: true
+    // enableSorting: true,
+    // enableFilter: true,
+    // sideBar: true
 };
 
 const gridDiv = document.querySelector('#myGrid');
 new Grid(gridDiv, gridOptions);
 
-gridOptions.api.setServerSideDatasource({
-
+const datasource = {
     getRows(params) {
-        const request = JSON.stringify(params.request, null, 1);
-        log(request);
 
+        console.log(JSON.stringify(params.request, null, 1));
 
         fetch('./olympicWinners/', {
             method: 'post',
-            body: request,
+            body: JSON.stringify(params.request),
             headers: {"Content-Type": "application/json; charset=utf-8"}
         })
-            .then(response => response.json())
-            .then(res => params.successCallback(res.rows, res.lastRow));
+        .then(httpResponse => httpResponse.json())
+        .then(response => {
+            params.successCallback(response.rows, response.lastRow);
+        })
+        .catch(error => {
+            console.error(error);
+            params.failCallback();
+        })
     }
-});
+};
 
-const log = (request) => console.log(JSON.stringify(request, null, 1));
+gridOptions.api.setServerSideDatasource(datasource);

@@ -13,11 +13,8 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
 app.post('/olympicWinners', function (req, res) {
-    OlympicWinnersService.list(req.body, function (rows, lastRow) {
-        res.json({
-            rows: rows,
-            lastRow: lastRow
-        });
+    OlympicWinnersService.getData(req.body, (rows, lastRow) => {
+        res.json({rows: rows, lastRow: lastRow});
     });
 });
 

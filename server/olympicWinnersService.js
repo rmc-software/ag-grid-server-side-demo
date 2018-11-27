@@ -1,208 +1,209 @@
 import mysql from 'mysql';
 
-const connection = mysql.createConnection({host: 'localhost', user: 'root', password: 'newrob12'});
+const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'reporting_app',
+    password: 'password123'
+});
 
-function OlympicWinnersService() {
-}
+class OlympicWinnersService {
 
-OlympicWinnersService.prototype.createSelectSql = function (rowGroupCols, valueCols, groupKeys) {
-    if (this.isDoingGrouping(rowGroupCols, groupKeys)) {
-        const colsToSelect = [];
+    getData(request, resultsCallback) {
 
-        const rowGroupCol = rowGroupCols[groupKeys.length];
-        colsToSelect.push(rowGroupCol.field);
+        const SQL = this.buildSql(request);
 
-        valueCols.forEach(function (valueCol) {
-            colsToSelect.push(valueCol.aggFunc + '(' + valueCol.field + ') as ' + valueCol.field);
+        connection.query(SQL, (error, results) => {
+            const rowCount = this.getRowCount(request, results);
+            const resultsForPage = this.cutResultsToPageSize(request, results);
+
+            resultsCallback(resultsForPage, rowCount);
         });
+    }
 
-        return ' select ' + colsToSelect.join(', ');
-    } else {
-        // select all columns
+    buildSql(request) {
+
+        const selectSql = this.createSelectSql(request);
+        const fromSql = ' FROM sample_data.olympic_winners ';
+        const limitSql = this.createLimitSql(request);
+
+        const orderBySql = this.createOrderBySql(request);
+        const whereSql = this.createWhereSql(request);
+        const groupBySql = this.createGroupBySql(request);
+
+        const SQL = selectSql + fromSql + whereSql + groupBySql + orderBySql + limitSql;
+
+        console.log(SQL);
+
+        return SQL;
+    }
+
+    createSelectSql(request) {
+        const rowGroupCols = request.rowGroupCols;
+        const valueCols = request.valueCols;
+        const groupKeys = request.groupKeys;
+
+        if (this.isDoingGrouping(rowGroupCols, groupKeys)) {
+            const colsToSelect = [];
+
+            const rowGroupCol = rowGroupCols[groupKeys.length];
+            colsToSelect.push(rowGroupCol.field);
+
+            valueCols.forEach(function (valueCol) {
+                colsToSelect.push(valueCol.aggFunc + '(' + valueCol.field + ') as ' + valueCol.field);
+            });
+
+            return ' select ' + colsToSelect.join(', ');
+        }
+
         return ' select *';
     }
-};
 
-OlympicWinnersService.prototype.createFilterSql = function (key, item) {
-    switch (item.filterType) {
-        case 'text':
-            return this.createTextFilterSql(key, item);
-        case 'number':
-            return this.createNumberFilterSql(key, item);
-        default:
-            console.log('unkonwn filter type: ' + item.filterType);
-    }
-};
-
-OlympicWinnersService.prototype.createNumberFilterSql = function (key, item) {
-    switch (item.type) {
-        case 'equals':
-            return key + ' = ' + item.filter;
-        case 'notEqual':
-            return key + ' != ' + item.filter;
-        case 'greaterThan':
-            return key + ' > ' + item.filter;
-        case 'greaterThanOrEqual':
-            return key + ' >= ' + item.filter;
-        case 'lessThan':
-            return key + ' < ' + item.filter;
-        case 'lessThanOrEqual':
-            return key + ' <= ' + item.filter;
-        case 'inRange':
-            return '(' + key + ' >= ' + item.filter + ' and ' + key + ' <= ' + item.filterTo + ')';
-        default:
-            console.log('unknown number filter type: ' + item.type);
-            return 'true';
-    }
-};
-
-OlympicWinnersService.prototype.createTextFilterSql = function (key, item) {
-    switch (item.type) {
-        case 'equals':
-            return key + ' = "' + item.filter + '"';
-        case 'notEqual':
-            return key + ' != "' + item.filter + '"';
-        case 'contains':
-            return key + ' like "%' + item.filter + '%"';
-        case 'notContains':
-            return key + ' not like "%' + item.filter + '%"';
-        case 'startsWith':
-            return key + ' like "' + item.filter + '%"';
-        case 'endsWith':
-            return key + ' like "%' + item.filter + '"';
-        default:
-            console.log('unknown text filter type: ' + item.type);
-            return 'true';
-    }
-};
-
-OlympicWinnersService.prototype.createWhereSql = function (rowGroupCols, groupKeys, filterModel) {
-    const that = this;
-    const whereParts = [];
-
-    if (groupKeys.length > 0) {
-        groupKeys.forEach(function (key, index) {
-            const colName = rowGroupCols[index].field;
-            whereParts.push(colName + ' = "' + key + '"')
-        });
+    createFilterSql(key, item) {
+        switch (item.filterType) {
+            case 'text':
+                return this.createTextFilterSql(key, item);
+            case 'number':
+                return this.createNumberFilterSql(key, item);
+            default:
+                console.log('unkonwn filter type: ' + item.filterType);
+        }
     }
 
-    if (filterModel) {
-        const keySet = Object.keys(filterModel);
-        keySet.forEach(function (key) {
-            const item = filterModel[key];
-            whereParts.push(that.createFilterSql(key, item));
-        });
+    createNumberFilterSql(key, item) {
+        switch (item.type) {
+            case 'equals':
+                return key + ' = ' + item.filter;
+            case 'notEqual':
+                return key + ' != ' + item.filter;
+            case 'greaterThan':
+                return key + ' > ' + item.filter;
+            case 'greaterThanOrEqual':
+                return key + ' >= ' + item.filter;
+            case 'lessThan':
+                return key + ' < ' + item.filter;
+            case 'lessThanOrEqual':
+                return key + ' <= ' + item.filter;
+            case 'inRange':
+                return '(' + key + ' >= ' + item.filter + ' and ' + key + ' <= ' + item.filterTo + ')';
+            default:
+                console.log('unknown number filter type: ' + item.type);
+                return 'true';
+        }
     }
 
-    if (whereParts.length > 0) {
-        return ' where ' + whereParts.join(' and ');
-    } else {
-        return '';
-    }
-};
-
-OlympicWinnersService.prototype.createGroupBySql = function (rowGroupCols, groupKeys) {
-    if (this.isDoingGrouping(rowGroupCols, groupKeys)) {
-        const colsToGroupBy = [];
-
-        const rowGroupCol = rowGroupCols[groupKeys.length];
-        colsToGroupBy.push(rowGroupCol.field);
-
-        return ' group by ' + colsToGroupBy.join(', ');
-    } else {
-        // select all columns
-        return '';
-    }
-};
-
-OlympicWinnersService.prototype.createOrderBySql = function (sortModel) {
-    const sortParts = [];
-    if (sortModel) {
-        sortModel.forEach(function (item) {
-            sortParts.push(item.colId + ' ' + item.sort);
-        });
-    }
-    if (sortParts.length > 0) {
-        return ' order by ' + sortParts.join(', ');
-    } else {
-        return '';
-    }
-};
-
-OlympicWinnersService.prototype.isDoingGrouping = function (rowGroupCols, groupKeys) {
-    // we are not doing grouping if at the lowest level. we are at the lowest level
-    // if we are grouping by more columns than we have keys for (that means the user
-    // has not expanded a lowest level group, OR we are not grouping at all).
-    return rowGroupCols.length > groupKeys.length;
-};
-
-OlympicWinnersService.prototype.createLimitSql = function (startRow, pageSize) {
-    return ' limit ' + (pageSize + 1) + ' offset ' + startRow;
-};
-
-OlympicWinnersService.prototype.getRowCount = function (startRow, pageSize, results) {
-    // if no results (maybe an error, or user is seeking for a block well past
-    // the possible blocks), then return null, which means we don't know what the
-    // last row is. the user should never ask for a block that is past the last block,
-    // but they could, for example, purge the cache, and since loading last time rows
-    // have been removed from the server.
-    if (results === null || results === undefined || results.length === 0) {
-        return null;
+    createTextFilterSql(key, item) {
+        switch (item.type) {
+            case 'equals':
+                return key + ' = "' + item.filter + '"';
+            case 'notEqual':
+                return key + ' != "' + item.filter + '"';
+            case 'contains':
+                return key + ' like "%' + item.filter + '%"';
+            case 'notContains':
+                return key + ' not like "%' + item.filter + '%"';
+            case 'startsWith':
+                return key + ' like "' + item.filter + '%"';
+            case 'endsWith':
+                return key + ' like "%' + item.filter + '"';
+            default:
+                console.log('unknown text filter type: ' + item.type);
+                return 'true';
+        }
     }
 
-    // see how many rows we got back
-    const rowCount = results.length;
+    createWhereSql(request) {
+        const rowGroupCols = request.rowGroupCols;
+        const groupKeys = request.groupKeys;
+        const filterModel = request.filterModel;
 
-    // if we got back more than the page size, then that means there are more rows
-    // after this page, so we return null, as we can't work out the row count
-    if (rowCount > pageSize) {
-        return null;
-    } else {
-        // otherwise we have reached the end of the list, ie the last row is in
-        // this block, so we can work out the exact row count
-        return startRow + rowCount;
+        const that = this;
+        const whereParts = [];
+
+        if (groupKeys.length > 0) {
+            groupKeys.forEach(function (key, index) {
+                const colName = rowGroupCols[index].field;
+                whereParts.push(colName + ' = "' + key + '"')
+            });
+        }
+
+        if (filterModel) {
+            const keySet = Object.keys(filterModel);
+            keySet.forEach(function (key) {
+                const item = filterModel[key];
+                whereParts.push(that.createFilterSql(key, item));
+            });
+        }
+
+        if (whereParts.length > 0) {
+            return ' where ' + whereParts.join(' and ');
+        } else {
+            return '';
+        }
     }
-};
 
-OlympicWinnersService.prototype.cutResultsToPageSize = function (pageSize, results) {
-    if (results && results.length > pageSize) {
-        return results.splice(0, pageSize);
-    } else {
-        return results;
+    createGroupBySql(request) {
+        const rowGroupCols = request.rowGroupCols;
+        const groupKeys = request.groupKeys;
+
+        if (this.isDoingGrouping(rowGroupCols, groupKeys)) {
+            const colsToGroupBy = [];
+
+            const rowGroupCol = rowGroupCols[groupKeys.length];
+            colsToGroupBy.push(rowGroupCol.field);
+
+            return ' group by ' + colsToGroupBy.join(', ');
+        } else {
+            // select all columns
+            return '';
+        }
     }
-};
 
-OlympicWinnersService.prototype.list = function (request, resultsCallback) {
+    createOrderBySql(request) {
+        const sortModel = request.sortModel;
 
-    const rowGroupCols = request.rowGroupCols;
-    const groupKeys = request.groupKeys;
-    const valueCols = request.valueCols;
-    const filterModel = request.filterModel;
-    const sortModel = request.sortModel;
+        const sortParts = [];
+        if (sortModel) {
+            sortModel.forEach(function (item) {
+                sortParts.push(item.colId + ' ' + item.sort);
+            });
+        }
+        if (sortParts.length > 0) {
+            return ' order by ' + sortParts.join(', ');
+        } else {
+            return '';
+        }
+    }
 
-    const startRow = request.startRow;
-    const endRow = request.endRow;
-    const pageSize = endRow - startRow;
+    isDoingGrouping(rowGroupCols, groupKeys) {
+        // we are not doing grouping if at the lowest level. we are at the lowest level
+        // if we are grouping by more columns than we have keys for (that means the user
+        // has not expanded a lowest level group, OR we are not grouping at all).
+        return rowGroupCols.length > groupKeys.length;
+    }
 
-    const selectSql = this.createSelectSql(rowGroupCols, valueCols, groupKeys);
-    const groupBySql = this.createGroupBySql(rowGroupCols, groupKeys);
-    const whereSql = this.createWhereSql(rowGroupCols, groupKeys, filterModel);
-    const orderBySql = this.createOrderBySql(sortModel);
-    const limitSql = this.createLimitSql(startRow, pageSize);
+    createLimitSql(request) {
+        const startRow = request.startRow;
+        const endRow = request.endRow;
+        const pageSize = endRow - startRow;
+        return ' limit ' + (pageSize + 1) + ' offset ' + startRow;
+    }
 
-    const sql = selectSql + ' from sample_data.olympic_winners ' + whereSql + groupBySql + orderBySql + limitSql;
+    getRowCount(request, results) {
+        if (results === null || results === undefined || results.length === 0) {
+            return null;
+        }
+        const currentLastRow = request.startRow + results.length;
+        return currentLastRow <= request.endRow ? currentLastRow : -1;
+    }
 
-    console.log('sql = ' + sql);
-    const that = this;
-
-    connection.query(sql, function (error, results, fields) {
-        const rowCount = that.getRowCount(startRow, pageSize, results);
-        const resultsForPage = that.cutResultsToPageSize(pageSize, results);
-
-        resultsCallback(resultsForPage, rowCount);
-    });
-
-};
+    cutResultsToPageSize(request, results) {
+        const pageSize = request.endRow - request.startRow;
+        if (results && results.length > pageSize) {
+            return results.splice(0, pageSize);
+        } else {
+            return results;
+        }
+    }
+}
 
 export default new OlympicWinnersService();
