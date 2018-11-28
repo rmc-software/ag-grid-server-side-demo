@@ -24,13 +24,13 @@ class OlympicWinnersService {
 
         const selectSql = this.createSelectSql(request);
         const fromSql = ' FROM sample_data.olympic_winners ';
+        const whereSql = this.createWhereSql(request);
         const limitSql = this.createLimitSql(request);
 
-        // const whereSql = this.createWhereSql(request);
         // const orderBySql = this.createOrderBySql(request);
         // const groupBySql = this.createGroupBySql(request);
 
-        const SQL = selectSql + fromSql + limitSql;
+        const SQL = selectSql + fromSql + whereSql + limitSql;
 
         console.log(SQL);
 
