@@ -7,21 +7,17 @@ import "ag-grid-community/dist/styles/ag-theme-balham.css";
 const gridOptions = {
     columnDefs: [
         {field: 'athlete'},
-        {field: 'country'}, //rowGroup: true, hide: true, sort: 'asc'},
-        {field: 'sport'}, //rowGroup: true, hide: true},
+        {field: 'country'},
+        {field: 'sport'},
         {field: 'year'},
-        {field: 'gold'}, //aggFunc: 'sum'},
+        {field: 'gold'},
         {field: 'silver'},
         {field: 'bronze'},
     ],
 
     rowModelType: 'serverSide',
     cacheBlockSize: 100,
-    maxBlocksInCache: 50,
-
-    // enableSorting: true,
-    // enableFilter: true,
-    // sideBar: true
+    maxBlocksInCache: 50
 };
 
 const gridDiv = document.querySelector('#myGrid');

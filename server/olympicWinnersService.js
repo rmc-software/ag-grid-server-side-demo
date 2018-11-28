@@ -26,11 +26,11 @@ class OlympicWinnersService {
         const fromSql = ' FROM sample_data.olympic_winners ';
         const limitSql = this.createLimitSql(request);
 
-        const orderBySql = this.createOrderBySql(request);
-        const whereSql = this.createWhereSql(request);
-        const groupBySql = this.createGroupBySql(request);
+        // const whereSql = this.createWhereSql(request);
+        // const orderBySql = this.createOrderBySql(request);
+        // const groupBySql = this.createGroupBySql(request);
 
-        const SQL = selectSql + fromSql + whereSql + groupBySql + orderBySql + limitSql;
+        const SQL = selectSql + fromSql + limitSql;
 
         console.log(SQL);
 
@@ -159,14 +159,28 @@ class OlympicWinnersService {
     }
 
     createOrderBySql(request) {
+        const rowGroupCols = request.rowGroupCols;
+        const groupKeys = request.groupKeys;
         const sortModel = request.sortModel;
+
+        const grouping = this.isDoingGrouping(rowGroupCols, groupKeys);
 
         const sortParts = [];
         if (sortModel) {
+
+            const groupColIds =
+                rowGroupCols.map(groupCol => groupCol.id)
+                    .slice(0, groupKeys.length + 1);
+
             sortModel.forEach(function (item) {
-                sortParts.push(item.colId + ' ' + item.sort);
+                if (grouping && groupColIds.indexOf(item.colId) < 0) {
+                    // ignore
+                } else {
+                    sortParts.push(item.colId + ' ' + item.sort);
+                }
             });
         }
+
         if (sortParts.length > 0) {
             return ' order by ' + sortParts.join(', ');
         } else {
