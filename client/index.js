@@ -23,6 +23,7 @@ const gridOptions = {
     // debug: true,
     // cacheBlockSize: 20,
     // maxBlocksInCache: 3,
+    // purgeClosedRowNodes: true,
     // maxConcurrentDatasourceRequests: 2,
     // blockLoadDebounceMillis: 1000
 };
