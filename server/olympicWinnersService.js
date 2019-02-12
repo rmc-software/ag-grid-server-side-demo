@@ -27,10 +27,10 @@ class OlympicWinnersService {
         const whereSql = this.createWhereSql(request);
         const limitSql = this.createLimitSql(request);
 
-        // const orderBySql = this.createOrderBySql(request);
-        // const groupBySql = this.createGroupBySql(request);
+        const orderBySql = this.createOrderBySql(request);
+        const groupBySql = this.createGroupBySql(request);
 
-        const SQL = selectSql + fromSql + whereSql + limitSql;
+        const SQL = selectSql + fromSql + whereSql + groupBySql + orderBySql + limitSql;
 
         console.log(SQL);
 

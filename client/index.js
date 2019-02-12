@@ -7,19 +7,18 @@ import "ag-grid-community/dist/styles/ag-theme-balham.css";
 const gridOptions = {
     columnDefs: [
         {field: 'athlete'},
-        {field: 'country'}, //, rowGroup: true, hide: true},
-        {field: 'sport'},
-        {field: 'year'},    //, filter: 'number', filterParams: {newRowsAction: 'keep'}},
-        {field: 'gold'},
-        {field: 'silver'},
-        {field: 'bronze'},
+        {field: 'country', rowGroup: true, hide: true},
+        {field: 'sport', rowGroup: true, hide: true},
+        {field: 'year', filter: 'number', filterParams: {newRowsAction: 'keep'}},
+        {field: 'gold', aggFunc: 'sum'},
+        {field: 'silver', aggFunc: 'sum'},
+        {field: 'bronze', aggFunc: 'sum'},
     ],
 
     rowModelType: 'serverSide',
 
-    // ...
-    // enableSorting: true,
-    // enableFilter: true,
+    enableSorting: true,
+    enableFilter: true,
     // debug: true,
     // cacheBlockSize: 20,
     // maxBlocksInCache: 3,
